@@ -1,0 +1,16 @@
+# Core Data Science Libraries
+pandas
+matplotlib
+seaborn
+
+# Machine Learning & NLP
+torch
+transformers
+huggingface_hub
+
+# Git Repository Mining
+pydriller
+
+# Utilities
+tqdm
+PyYAML

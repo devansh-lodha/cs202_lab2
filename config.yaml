@@ -1,0 +1,52 @@
+# ===================================================================
+# Central Configuration for CS202 Lab 2 Pipeline
+# ===================================================================
+
+# --- I/O and Project Settings ---
+io:
+  repo_url: "https://github.com/DenisCarriere/geocoder"
+  local_repo_path: "cloned_repo/geocoder"
+  output_csv_path: "lab2_results_final.csv"
+  output_chart_path: "visuals/" # Directory for plots
+  processing_limit: null # Set to an integer for testing, null for full run
+
+# --- Model and Inference Settings ---
+models:
+  baseline_llm: "mamiksik/CommitPredictorT5"
+  analysis_llm: "Qwen/Qwen3-4B-Instruct-2507"
+
+inference:
+  max_input_chars: 16000
+  max_output_tokens: 1024
+  t5_batch_size: 8
+
+# --- LLM Prompt Templates ---
+# Prompts are stored here to separate them from the application logic.
+prompts:
+  rectify:
+    system: "You are an expert developer. Write a Conventional Commits message. Respond with a single JSON object."
+    user: |
+      [CODE DIFF]:
+      ```diff
+      {diff}
+      ```
+      [FORMAT]: {{"rectified_message": "<type>(<scope>): <subject>"}}
+
+  evaluate:
+    system: "You are a code reviewer. Evaluate the commit message's quality based on the diff. Respond with a JSON object containing 'score' (1-5) and 'justification'."
+    user: |
+      [CODE DIFF]:
+      ```diff
+      {diff}
+      ```
+      [COMMIT MESSAGE]: "{message}"
+      [TASK]: Score 1-5 (Poor to Excellent).
+      [FORMAT]: {{"score": <integer>, "justification": "<string>"}}
+
+  classify:
+    system: "You are a commit message analyst. Classify the improvement of 'New Message' over 'Old Message'. Respond with a single JSON object."
+    user: |
+      [Old Message]: "{old_message}"
+      [New Message]: "{new_message}"
+      [TASK]: Classify improvement: [Cosmetic, Semantic, Corrective, Trivial, Regressive].
+      [FORMAT]: {{"improvement_category": "<category>", "reason": "<brief explanation>"}}
