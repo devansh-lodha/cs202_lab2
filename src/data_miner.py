@@ -11,9 +11,13 @@ from tqdm.auto import tqdm
 from src.config_loader import config
 
 def mine_repository(limit: Optional[int] = None) -> pd.DataFrame:
-    """Mines the configured Git repository for bug-fixing commits affecting Python files."""
+    """
+    Mines the configured Git repository for bug-fixing commits, extracting
+    metadata, diffs, and the full source code before and after the change.
+    """
     repo_url = config['io']['repo_url']
     local_path = config['io']['local_repo_path']
+    cols = config['columns']
     logging.info(f"Starting repository mining for {repo_url}")
     
     BUG_KEYWORDS = [
@@ -26,7 +30,6 @@ def mine_repository(limit: Optional[int] = None) -> pd.DataFrame:
         re.IGNORECASE
     )
     
-    # Ensure the target directory for the clone exists
     clone_dir = os.path.dirname(local_path)
     os.makedirs(clone_dir, exist_ok=True)
     
@@ -42,8 +45,12 @@ def mine_repository(limit: Optional[int] = None) -> pd.DataFrame:
             for mod in commit.modified_files:
                 if mod.diff and mod.new_path and mod.new_path.endswith('.py'):
                     bug_data.append({
-                        "Hash": commit.hash, "Message": commit.msg,
-                        "Filename": mod.new_path, "Diff": mod.diff
+                        cols['hash']: commit.hash,
+                        cols['message']: commit.msg,
+                        cols['filename']: mod.new_path,
+                        cols['diff']: mod.diff,
+                        cols['source_before']: mod.source_code_before,
+                        cols['source_current']: mod.source_code
                     })
                     commit_had_py_file = True
             if commit_had_py_file: commits_processed += 1

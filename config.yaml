@@ -1,5 +1,5 @@
 # ===================================================================
-# Central Configuration for CS202 Lab 2 Pipeline
+# Central Configuration for CS202 Lab 2 Pipeline (Definitive Version)
 # ===================================================================
 
 # --- I/O and Project Settings ---
@@ -7,7 +7,7 @@ io:
   repo_url: "https://github.com/DenisCarriere/geocoder"
   local_repo_path: "cloned_repo/geocoder"
   output_csv_path: "lab2_results_final.csv"
-  output_chart_path: "visuals/" # Directory for plots
+  visuals_dir: "visuals/"
   processing_limit: null # Set to an integer for testing, null for full run
 
 # --- Model and Inference Settings ---
@@ -19,6 +19,28 @@ inference:
   max_input_chars: 16000
   max_output_tokens: 1024
   t5_batch_size: 8
+
+# --- Column Name Constants (Single Source of Truth) ---
+# Defines the final headers for the output CSV file.
+columns:
+  # Mined Data
+  hash: "Hash"
+  message: "Message"
+  filename: "Filename"
+  diff: "Diff"
+  source_before: "Source_Code_Before"
+  source_current: "Source_Code_Current"
+  # LLM Generated Data
+  baseline_msg: "Baseline_Message"
+  rectified_msg: "Rectified_Message"
+  improvement_cat: "Improvement_Category"
+  improvement_reason: "Improvement_Reason"
+  dev_score: "Developer_Score"
+  llm_score: "Baseline_LLM_Score"
+  rectifier_score: "Rectifier_Score"
+  dev_justify: "Developer_Justification"
+  llm_justify: "Baseline_LLM_Justification"
+  rectifier_justify: "Rectifier_Justification"
 
 # --- LLM Prompt Templates ---
 # Prompts are stored here to separate them from the application logic.
