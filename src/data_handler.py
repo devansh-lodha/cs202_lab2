@@ -13,30 +13,52 @@ class DataHandler:
         self.output_path = config['io']['output_csv_path']
 
     def _initialize_dataframe(self, mined_df: pd.DataFrame) -> pd.DataFrame:
-        """Loads existing results and merges them with newly mined data."""
+        """
+        Intelligently merges newly mined data with existing results OR initializes a clean
+        DataFrame with a stable schema for a fresh run.
+        """
+        cols = config['columns']
+        key_cols = [cols['hash'], cols['message'], cols['filename'], cols['diff']]
+        
         output_path = config['io']['output_csv_path']
         if os.path.exists(output_path):
             logging.info(f"Resuming from existing file: {output_path}")
             processed_df = pd.read_csv(output_path)
-            merged_df = pd.merge(mined_df, processed_df, on=["Hash", "Message", "Filename", "Diff"], how='left')
+            analysis_cols = [
+                cols['baseline_msg'], cols['rectified_msg'], cols['improvement_cat'],
+                cols['improvement_reason'], cols['dev_score'], cols['llm_score'],
+                cols['rectifier_score'], cols['dev_justify'], cols['llm_justify'],
+                cols['rectifier_justify']
+            ]
+            cols_to_merge = key_cols + [c for c in analysis_cols if c in processed_df.columns]
+            merged_df = pd.merge(mined_df, processed_df[cols_to_merge], on=key_cols, how='left')
         else:
-            logging.info("No existing results file found. Starting a new run.")
+            logging.info("No existing results file found. Initializing new DataFrame schema.")
             merged_df = mined_df
+            
+            # Define columns and their correct initial types
+            string_cols = [
+                cols['baseline_msg'], cols['rectified_msg'], cols['improvement_cat'],
+                cols['improvement_reason'], cols['dev_justify'], cols['llm_justify'],
+                cols['rectifier_justify']
+            ]
+            numeric_cols = [
+                cols['dev_score'], cols['llm_score'], cols['rectifier_score']
+            ]
+            
+            # Initialize with types that pandas understands correctly
+            for col in string_cols:
+                merged_df[col] = pd.Series(dtype='object')
+            for col in numeric_cols:
+                merged_df[col] = pd.Series(dtype='float64') # Use float to allow for NaN
         
-        expected_cols = ["Baseline_Message", "Rectified_Message", "Improvement_Category", "Improvement_Reason", 
-                         "Developer_Score", "Baseline_LLM_Score", "Rectifier_Score", "Developer_Justification", 
-                         "Baseline_LLM_Justification", "Rectifier_Justification"]
-        for col in expected_cols:
-            if col not in merged_df.columns:
-                merged_df[col] = None
         return merged_df
 
     def get_dataframe(self) -> pd.DataFrame:
-        """Returns the current state of the DataFrame."""
         return self.df
 
     def get_rows_to_process(self, column_to_check: str) -> pd.DataFrame:
-        """Returns a view of the DataFrame for rows that need processing."""
+        """Returns rows that need processing based on a check for null values."""
         return self.df[self.df[column_to_check].isnull()]
 
     def update_row(self, index, data: dict):

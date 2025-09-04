@@ -16,7 +16,8 @@ def generate_text_report(df: pd.DataFrame) -> None:
     report_lines = ["\n", "="*50, " DETAILED SCORE ANALYSIS", "="*50]
 
     for name, col in score_cols.items():
-        valid_scores = df[col].dropna().astype(int)
+        numeric_scores = pd.to_numeric(df[col], errors='coerce')
+        valid_scores = numeric_scores.dropna().astype(int)
         valid_scores = valid_scores[valid_scores > 0]
         
         if not valid_scores.empty:

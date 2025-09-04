@@ -3,7 +3,7 @@
 Contains the logic for processing a single row of the DataFrame with the
 advanced analysis LLM.
 """
-import pandas as pd  # <--- THIS IS THE FIX
+import pandas as pd
 from src.config_loader import config
 from src.llm.qwen_handler import QwenHandler
 from src.utils import parse_json_from_response
